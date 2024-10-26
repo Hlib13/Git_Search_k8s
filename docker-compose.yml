@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:7.4.0"
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+    networks:
+      - redis-network
+    volumes:
+      - redis-data:/data
+    environment:
+      REDIS_PASSWORD: 13289812
+
+  postgres:
+    image: postgres:latest
+    container_name: "postgres"
+    restart: always
+    environment:
+      POSTGRES_DB: testDB
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 13289812
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    container_name: "app"
+    build: .
+    image: "github-search-app:latest"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - redis-network
+
+networks:
+  redis-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    name: "github-search-app-redis-data"
+    driver: local
+  postgres_data:
+    name: "github-search-app-postgres-data"
+    driver: local
